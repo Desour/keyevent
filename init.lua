@@ -77,6 +77,9 @@ local function look_differences(bitsa, bitsb)
 end
 
 local function is_different(diff_shall, diff_is)
+	if diff_shall == 511 then
+		return true
+	end
 	for i = #meaning, 0, -1 do
 		local n = 2^i
 		local a = diff_shall - n >= 0
