@@ -120,7 +120,7 @@ function keyevent.register_on_keypress_bits(keys, func)
 	keyevents_bits[keys] = func
 end
 local keyevents = {}
-function keyevent.register_on_keypress(func)
+function keyevent.register_on_keypress(keys, func)
 	keys, func = handle_keys(keys, func)
 	keyevents[keys] = func
 end
