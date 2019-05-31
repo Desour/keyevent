@@ -1,4 +1,6 @@
 
+-- helpers:
+
 local meaning = {
 	[0] = "up", "down", "left",
 	"right", "jump", "aux1",
@@ -101,39 +103,65 @@ local function handle_keys(keys, func)
 	return keys, func
 end
 
+local function add_func_to_callback_origins(func)
+	-- this is taken from minetest/builtin/game/register.lua
+	minetest.callback_origins[func] = {
+		mod = core.get_current_modname() or "??",
+		name = debug.getinfo(1, "n").name or "??"
+	}
+end
+--------------------------------------------------------------------------------
+
+-- global functions:
+
 keyevent = {}
+
 local keyevents_bits = {}
 function keyevent.register_on_keypress_bits(keys, func)
 	keys, func = handle_keys(keys, func)
-	keyevents_bits[keys] = func
+	add_func_to_callback_origins(func)
+	if not keyevents_bits[keys] then
+		keyevents_bits[keys] = {func}
+		return
+	end
+	keyevents_bits[keys][#keyevents_bits[keys] + 1] = func
 end
+
 local keyevents = {}
 function keyevent.register_on_keypress(keys, func)
 	keys, func = handle_keys(keys, func)
-	keyevents[keys] = func
+	add_func_to_callback_origins(func)
+	if not keyevents[keys] then
+		keyevents[keys] = {func}
+		return
+	end
+	keyevents[keys][#keyevents[keys] + 1] = func
 end
+--------------------------------------------------------------------------------
+
+-- use minetest registration fuctions:
 
 local function on_step(dtime, player, old_keys, keys, player_name)
 	if keys == old_keys then
 		return
 	end
 	local diff = look_differences(keys, old_keys)
-	for diff_shall, f in pairs(keyevents_bits) do
+	for diff_shall, fs in pairs(keyevents_bits) do
 		if is_different(diff_shall, diff) then
-			f(keys, old_keys, dtime, player_name)
+			minetest.run_callbacks(fs, -1, keys, old_keys, dtime, player_name)
 		end
 	end
 	local keys_t = bits_to_table(keys)
 	local old_keys_t = bits_to_table(old_keys)
-	for diff_shall, f in pairs(keyevents) do
+	for diff_shall, fs in pairs(keyevents) do
 		if is_different(diff_shall, diff) then
-			f(keys_t, old_keys_t, dtime, player_name)
+			minetest.run_callbacks(fs, -1, keys_t, old_keys_t, dtime, player_name)
 		end
 	end
 	return keys
 end
 
-if INIT == "client" then
+if INIT == "client" then -- csm
 	local localplayer
 	minetest.register_on_connect(function()
 		localplayer = minetest.localplayer
@@ -148,7 +176,7 @@ if INIT == "client" then
 		keys = f(dtime, localplayer, keys, localplayer:get_key_pressed()) or keys
 	end
 
-elseif INIT == "game" then
+elseif INIT == "game" then -- ssm
 	local keys = {}
 	local f = on_step
 	function on_step(dtime)
