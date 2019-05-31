@@ -1,15 +1,3 @@
---[[
- __                                           __
-|  | __ ____ ___.__. _______  __ ____   _____/  |_
-|  |/ // __ <   |  |/ __ \  \/ // __ \ /    \   __\
-|    <\  ___/\___  \  ___/\   /\  ___/|   |  \  |
-|__|_ \\___  > ____|\___  >\_/  \___  >___|  /__|
-     \/    \/\/         \/          \/     \/
---]]
-
-local load_time_start = os.clock()
-local modname = minetest.get_current_modname()
-
 
 local meaning = {
 	[0] = "up", "down", "left",
@@ -179,12 +167,3 @@ else
 end
 
 minetest.register_globalstep(on_step)
-
-
-local time = math.floor(tonumber(os.clock()-load_time_start)*100+0.5)/100
-local msg = "["..modname.."] loaded after ca. "..time
-if time > 0.05 then
-	print(msg)
-else
-	minetest.log("info", msg)
-end
